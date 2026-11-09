@@ -152,6 +152,8 @@
     .empty { text-align: center; color: var(--muted); padding: 40px 0; grid-column: 1 / -1; }
 
 
+    [hidden] { display: none !important; }
+
     /* COMBOS */
     .combos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
     .combo {
@@ -266,12 +268,14 @@
 
     <nav class="cats" id="cats"></nav>
 
-    <div class="section-head">
-      <h2>Combos destacados ✨ <small>hasta S/ 105</small></h2>
+    <div id="combosWrap" hidden>
+      <div class="section-head">
+        <h2>Combos destacados ✨ <small>hasta S/ 105</small></h2>
+      </div>
+      <section class="combos" id="combos"></section>
     </div>
-    <section class="combos" id="combos"></section>
 
-    <div class="section-head">
+    <div class="section-head" id="gridHead">
       <h2>Mis favoritos 💗 <small id="count"></small></h2>
       <div class="tabs" id="tabs"></div>
     </div>
@@ -377,13 +381,13 @@
       }).join("");
     }
 
-    const iconos = { "Todo": "🎀", "Ropa deportiva": "🧘‍♀️", "Ropa": "👚", "Fitness": "🏋️‍♀️", "Belleza": "💄", "Audio": "🎧", "Accesorios": "💎" };
+    const iconos = { "Todo": "🎀", "Destacados": "⭐", "Combos": "🎁", "Ropa deportiva": "🧘‍♀️", "Ropa": "👚", "Fitness": "🏋️‍♀️", "Belleza": "💄", "Audio": "🎧", "Accesorios": "💎" };
     let tienda = "Todas", cat = "Todo", q = "", orden = 0; // 0 normal, 1 menor a mayor, 2 mayor a menor
 
     const $ = id => document.getElementById(id);
 
     function pintarCats() {
-      const lista = ["Todo", ...new Set(regalos.map(r => r.cat))];
+      const lista = ["Todo", "Destacados", "Combos", ...new Set(regalos.map(r => r.cat))];
       $("cats").innerHTML = "";
       lista.forEach(c => {
         const b = document.createElement("button");
@@ -407,9 +411,14 @@
 
     function pintar() {
       pintarCats(); pintarTabs();
+      // Los combos solo aparecen al elegir "Combos" o al buscar "combo"
+      const verCombos = cat === "Combos" || q.includes("combo");
+      $("combosWrap").hidden = !verCombos;
+      $("gridHead").hidden = $("grid").hidden = verCombos;
+      if (verCombos) return;
       let lista = regalos.filter(r =>
         (tienda === "Todas" || r.tienda === tienda) &&
-        (cat === "Todo" || r.cat === cat) &&
+        (cat === "Todo" || r.cat === cat || (cat === "Destacados" && r.best)) &&
         (!q || (r.nombre + " " + (r.detalle || "") + " " + r.cat).toLowerCase().includes(q)));
       if (orden === 0) lista = [...lista].sort((a, b) => (b.best ? 1 : 0) - (a.best ? 1 : 0));
       if (orden === 1) lista = [...lista].sort((a, b) => a.precio - b.precio);
